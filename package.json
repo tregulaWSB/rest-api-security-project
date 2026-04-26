@@ -1,0 +1,29 @@
+{
+  "name": "rest-api-security-project",
+  "version": "1.0.0",
+  "description": "NodeJS project for presenting REST API best security practices",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo 123"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tregulaWSB/rest-api-security-project.git"
+  },
+  "keywords": [
+    "nodejs",
+    "express.js",
+    "rest",
+    "api",
+    "security"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tregulaWSB/rest-api-security-project/issues"
+  },
+  "homepage": "https://github.com/tregulaWSB/rest-api-security-project#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

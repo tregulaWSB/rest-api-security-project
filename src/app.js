@@ -1,9 +1,15 @@
 const express = require('express');
+const { connectDB } = require('./config/db');
 
 const app = express();
 
-app.get('/test', (req, res) => {
-    res.send("Test")
-})
+let connection;
 
-app.listen(80, () => console.log(`App is listening on http://localhost:80`));
+const port = 80
+const startServer = async () => {
+  connection = await connectDB();
+  app.listen(port, () => 
+    console.log(`Server is listening on http://localhost:${port}`));
+}
+
+startServer();

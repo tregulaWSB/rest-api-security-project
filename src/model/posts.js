@@ -1,4 +1,5 @@
 const { connectDB } = require('../config/db');
+const { CustomError } = require('../utils/customError');
 
 const getPosts = async () => {
   const connection = await connectDB();
@@ -16,8 +17,7 @@ const editPost = async (user, text, id) => {
   const connection = await connectDB();
   const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
   if (!query){
-    // throw error
-    return;
+    throw new CustomError('post not found or access denied', 404);
   }
   connection.prepare('update posts set post_text = ? where rowid = ? and posted_by = ?').run(text, id, user);
   return;
@@ -27,7 +27,7 @@ const deletePost = async (user, id) => {
   const connection = await connectDB();
   const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
   if (!query){
-    // throw error
+    throw new CustomError('post not found or access denied', 404);
     return;
   }
   connection.prepare('delete from posts where rowid = ? and posted_by = ?').run(id, user);

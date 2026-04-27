@@ -1,22 +1,21 @@
-const {
-  verifyJWT
-} = require('../utils/jwt');
+const { verifyJWT } = require('../utils/jwt');
+const { CustomError } = require('../utils/customError');
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers['authorization'];
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ msg: 'unauthorized' });
+    throw new CustomError('unauthorized', 401);
   }
 
   const token = authHeader.split(' ')[1];
   const payload = verifyJWT(token);
 
   if (!payload) {
-    return res.status(401).json({ msg: 'unauthorized' });
+    throw new CustomError('unauthorized', 401);
   }
 
-  req.user = { user: payload.user };
+  req.user = { username: payload.username };
   next();
 };
 

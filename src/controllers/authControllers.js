@@ -5,24 +5,21 @@ const {
 const {
   createJWT
 } = require('../utils/jwt')
+const { asyncWrapper } = require('../utils/asyncWrapper');
+const { CustomError } = require('../utils/customError');
 
-const createToken = async (req, res) => {
+const createToken = asyncWrapper(async (req, res) => {
   const {user, password} = req.body;
   const userDetails = await getUserDetails(user);
-  if (!userDetails) {
-    res.status(401).json({'msg': 'unauthorized'});
-    return;
+  const dummyHash = '7AWSpBMeqGC6SMJap3qvs9S9Gpb.4Nre5tDT7&BQyBlGKxyyTdue4M0grCv7'
+  const hash = userDetails ? userDetails.password : dummyHash;
+  const match = await bcrypt.compare(password, hash);
+  if (!userDetails || !match) {
+    throw new CustomError('unauthorized', 401)
   }
-  const hash = userDetails.password;
-  bcrypt.compare(password, hash, function(err, result) {
-    if (result) {
-      const token = createJWT(user)
-      res.status(200).json({'msg': 'ok', 'token': token});
-    } else {
-      res.status(401).json({'msg': 'unauthorized'});
-    }
-  });
-};
+  const token = createJWT(user);
+  res.status(200).json({'token': token});
+});
 
 module.exports = {
   createToken

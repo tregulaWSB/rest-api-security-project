@@ -1,0 +1,11 @@
+const { connectDB } = require('../config/db');
+
+const getUserDetails = async (user) => {
+  const connection = await connectDB();
+  const query = connection.prepare(`select * from users where name = '${user}'`).get();
+  return query;
+};
+
+module.exports = {
+  getUserDetails
+}

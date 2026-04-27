@@ -1,15 +1,17 @@
 const { DatabaseSync } = require('node:sqlite');
-const dbPath = './src/sqlite/users.db'
+const dbPath = './src/sqlite/users.db';
+let connection;
 
 const connectDB = () => {
   return new Promise((resolve, reject) => {
     try {
-      const connection = new DatabaseSync(dbPath);
-      console.log('connected')
+      if (!connection){
+        connection = new DatabaseSync(dbPath);
+      }
       resolve(connection);
     } catch (err) {
-      reject(err)
-    }
+      reject(err);
+    };
   });
 };
 

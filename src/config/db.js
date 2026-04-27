@@ -1,5 +1,5 @@
 const { DatabaseSync } = require('node:sqlite');
-const dbPath = './src/sqlite/users.db';
+const dbPath = process.env.db_path;
 let connection;
 
 const connectDB = () => {

@@ -26,7 +26,6 @@ const editPost = async (user, text, id) => {
 const deletePost = async (user, id) => {
   const connection = await connectDB();
   const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
-  console.log(query)
   if (!query){
     // throw error
     return;

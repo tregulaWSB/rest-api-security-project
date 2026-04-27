@@ -11,19 +11,22 @@ const getPostsController = async (req, res) => {
 };
 
 const createPostController = async (req, res) => {
-  const {user, text} = req.body;
+  const user = req.user.user;
+  const { text } = req.body;
   await createPost(user, text);
-  res.status(200).json({'msg': 'ok'});
+  res.status(201).json({'msg': 'ok'});
 };
 
 const editPostController = async (req, res) => {
-  const {user, text, id} = req.body;
+  const user = req.user.user;
+  const { text, id } = req.body;
   await editPost(user, text, id);
   res.status(200).json({'msg': 'ok'});
 };
 
 const deletePostController = async (req, res) => {
-  const {user, id} = req.body;
+  const user = req.user.user;
+  const { id } = req.body;
   await deletePost(user, id);
   res.status(200).json({'msg': 'ok'});
 };

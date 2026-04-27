@@ -6,15 +6,18 @@ const createJWT = (user) => {
     user: user
   },
   jwtSecret,
-  {expiresIn: '1m'}
+  {expiresIn: process.env.JWT_lifetime}
   )
   return token;
 }
 
 const verifyJWT = (token) => {
-  jwt.verify(token, jwtSecret);
-  return;
-}
+  try {
+    return jwt.verify(token, jwtSecret);
+  } catch (err) {
+    return null;
+  }
+};
 
 module.exports = {
   createJWT,

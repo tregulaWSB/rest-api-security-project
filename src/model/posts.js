@@ -8,29 +8,30 @@ const getPosts = async () => {
 
 const createPost = async (user, text) => {
   const connection = await connectDB();
-  const insert = connection.prepare(`insert into posts values ('${text}', '${user}')`).all();
+  const insert = connection.prepare('insert into posts values (?, ?)').run(text, user);
   return;
 };
 
 const editPost = async (user, text, id) => {
   const connection = await connectDB();
-  const query = connection.prepare(`select rowid, * from posts where rowid = ${id} and posted_by = '${user}'`).get();
+  const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
   if (!query){
     // throw error
     return;
   }
-  connection.prepare(`update posts set post_text = '${text}' where rowid = ${id}`).all();
+  connection.prepare('update posts set post_text = ? where rowid = ? and posted_by = ?').run(text, id, user);
   return;
 };
 
 const deletePost = async (user, id) => {
   const connection = await connectDB();
-  const query = connection.prepare(`select rowid, * from posts where rowid = ${id} and posted_by = '${user}'`).get();
+  const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
+  console.log(query)
   if (!query){
     // throw error
     return;
   }
-  connection.prepare(`delete from posts where rowid = ${id}`).all();
+  connection.prepare('delete from posts where rowid = ? and posted_by = ?').run(id, user);
   return;
 };
 

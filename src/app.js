@@ -9,7 +9,13 @@ const authRouter = require('./routes/authRoutes');
 const postRouter = require('./routes/postRoutes');
 
 // middleware
+const { morganMiddleware } = require('./middleware/morganMiddleware');
 const { errorHandler } = require('./middleware/errorHandler');
+
+// utils
+const { logger } = require('./utils/logger');
+
+app.use(morganMiddleware); 
 
 app.use(express.json());
 
@@ -21,11 +27,12 @@ app.use((req, res) => {
 
 app.use(errorHandler);
 
-const port = 80;
+const port = process.env.PORT || 3000;;
 const startServer = async () => {
   await connectDB();
   app.listen(port, () => 
-    console.log(`Server is listening on http://localhost:${port}`));
+    logger.info('Server started', { port })
+  );
 }
 
 startServer();

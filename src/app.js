@@ -9,6 +9,7 @@ const { connectDB } = require('./config/db');
 // routers
 const authRouter = require('./routes/authRoutes');
 const postRouter = require('./routes/postRoutes');
+const docsRouter = require('./routes/docsRoutes');
 
 // middleware
 const { morganMiddleware } = require('./middleware/morganMiddleware');
@@ -23,7 +24,12 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'none'"],
-      frameAncestors: ["'none'"]
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc:  ["'self'", "'unsafe-inline'"],
+      imgSrc:    ["'self'", "data:"],
+      fontSrc:   ["'self'", "data:"],
+      connectSrc:["'self'"],
+      frameAncestors: ["'self'"] 
     }
   },
   crossOriginResourcePolicy: { policy: 'same-origin' }
@@ -42,8 +48,11 @@ app.use((globalRateLimiter));
 
 app.use(express.json({ limit: '10kb' }));
 
-app.use('/auth', authRouter);
-app.use('/posts', postRouter);
+const API_PREFIX = '/api/v1';
+
+app.use('/docs', docsRouter);
+app.use(`${API_PREFIX}/auth`, authRouter);
+app.use(`${API_PREFIX}/posts`, postRouter);
 
 app.use((req, res) => {
   res.status(404).json({ msg: 'not found' });

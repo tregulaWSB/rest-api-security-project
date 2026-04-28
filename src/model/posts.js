@@ -16,8 +16,12 @@ const createPost = async (user, text) => {
 const editPost = async (user, text, id) => {
   const connection = await connectDB();
   const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
-  if (!query){
-    throw new CustomError('post not found or access denied', 404);
+  const compareQuery = connection.prepare('select rowid, * from posts where rowid = ?').get(id);
+  if (!compareQuery){
+    throw new CustomError('post not found', 404);
+  }
+  else if (!query) {
+    throw new CustomError('forbidden', 403);
   }
   connection.prepare('update posts set post_text = ? where rowid = ? and posted_by = ?').run(text, id, user);
   return;
@@ -26,9 +30,12 @@ const editPost = async (user, text, id) => {
 const deletePost = async (user, id) => {
   const connection = await connectDB();
   const query = connection.prepare('select rowid, * from posts where rowid = ? and posted_by = ?').get(id, user);
-  if (!query){
-    throw new CustomError('post not found or access denied', 404);
-    return;
+  const compareQuery = connection.prepare('select rowid, * from posts where rowid = ?').get(id);
+  if (!compareQuery){
+    throw new CustomError('post not found', 404);
+  }
+  else if (!query) {
+    throw new CustomError('forbidden', 403);
   }
   connection.prepare('delete from posts where rowid = ? and posted_by = ?').run(id, user);
   return;
@@ -39,4 +46,4 @@ module.exports = {
   createPost,
   editPost,
   deletePost
-}
+};

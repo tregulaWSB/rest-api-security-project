@@ -1,0 +1,330 @@
+openapi: "3.1.0"
+info:
+  title: REST API Security Project
+  version: "1.0.0"
+  description: |
+    Demonstracyjne REST API zbudowane na Node.js + SQLite, zabezpieczone zgodnie ze standardami OWASP API Security Top 10, OWASP Top 10 i OWASP ASVS.
+
+servers:
+  - url: http://localhost/api/v1
+    description: Środowisko lokalne
+
+tags:
+  - name: Auth
+    description: Autentykacja i zarządzanie tokenami
+  - name: Posts
+    description: Operacje na postach użytkowników
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token JWT otrzymany z POST /auth, ważny 15 minut
+
+  schemas:
+    AccessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    AuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/AccessToken'
+        - type: object
+          properties:
+            refresh_token:
+              type: string
+              example: a3f1c2b4d5e6...
+              description: 128-znakowy hex token ważny 1 dzień
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        text:
+          type: string
+          example: Hello world!
+        username:
+          type: string
+          example: user1
+
+    ErrorResponse:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: unauthorized
+
+  responses:
+    Unauthorized:
+      description: Brak lub nieprawidłowy token autoryzacyjny
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: unauthorized
+    UnauthorizedLogin:
+      description: Błędna nazwa użytkownika lub hasło
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: unauthorized
+    UnauthorizedRefreshToken:
+      description: Nieprawidłowy refresh token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: unauthorized
+    BadRequest:
+      description: Nieprawidłowe dane wejściowe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: bad request
+    Forbidden:
+      description: Brak uprawnień
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: forbidden
+    TooManyRequests:
+      description: Przekroczono limit żądań
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            msg: too many requests
+
+paths:
+
+  /auth:
+    post:
+      tags: [Auth]
+      summary: Logowanie
+      description: |
+        Uwierzytelnienie użytkownika na podstawie nazwy i hasła.
+        Zwraca access token (ważność 15 min) i refresh token (ważność 1 dzień).
+        Poprzednie refresh tokeny użytkownika są unieważniane.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, password]
+              properties:
+                user:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  pattern: '^[a-zA-Z0-9_.\-]+$'
+                  example: user1
+                password:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  example: password123
+      responses:
+        "200":
+          description: Pomyślne logowanie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/UnauthorizedLogin'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Odświeżenie access i refresh tokenów
+      description: |
+        Wymienia aktywny refresh token na nowy access token JWT i refresh token.
+        Stare refresh tokeny użytkownika są usuwane.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  minLength: 128
+                  maxLength: 128
+                  example: a3f1c2b4d5e6...
+      responses:
+        "200":
+          description: Nowy access token i refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/UnauthorizedRefreshToken'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /posts:
+    get:
+      tags: [Posts]
+      summary: Pobranie postów
+      description: Zwraca listę wszystkich postów. Nie wymaga autoryzacji.
+      responses:
+        "200":
+          description: Lista postów
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: ok
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+
+    post:
+      tags: [Posts]
+      summary: Utworzenie posta
+      description: Tworzy nowy post dla zalogowanego użytkownika.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  example: Treść nowego posta
+      responses:
+        "201":
+          description: Post utworzony
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Post created successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+    patch:
+      tags: [Posts]
+      summary: Edycja posta
+      description: |
+        Aktualizuje treść istniejącego posta.
+        Użytkownik może edytować wyłącznie własne posty.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, text]
+              properties:
+                id:
+                  type: integer
+                  minimum: 1
+                  example: 1
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  example: Zaktualizowana treść
+      responses:
+        "200":
+          description: Post zaktualizowany
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Post ${id} edited successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+    delete:
+      tags: [Posts]
+      summary: Usunięcie posta
+      description: |
+        Usuwa post o podanym ID.
+        Użytkownik może usuwać wyłącznie własne posty.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: integer
+                  minimum: 1
+                  example: 1
+      responses:
+        "200":
+          description: Post usunięty
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  msg:
+                    type: string
+                    example: Post ${id} edited successfully
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'

@@ -1,4 +1,4 @@
-const { verifyJWT } = require('../utils/jwt');
+const { verifyAccessToken } = require('../utils/jwt');
 const { CustomError } = require('../utils/customError');
 
 const authMiddleware = (req, res, next) => {
@@ -9,7 +9,7 @@ const authMiddleware = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1];
-  const payload = verifyJWT(token);
+  const payload = verifyAccessToken(token);
 
   if (!payload) {
     throw new CustomError('unauthorized', 401);

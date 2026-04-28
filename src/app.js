@@ -12,8 +12,9 @@ const postRouter = require('./routes/postRoutes');
 const { morganMiddleware } = require('./middleware/morganMiddleware');
 const { errorHandler } = require('./middleware/errorHandler');
 
-// utils
+// utils/models
 const { logger } = require('./utils/logger');
+const { deleteExpiredTokens } = require('./model/refreshTokens')
 
 app.use(morganMiddleware); 
 
@@ -30,6 +31,9 @@ app.use(errorHandler);
 const port = process.env.PORT || 3000;;
 const startServer = async () => {
   await connectDB();
+  logger.info('Successfully established connection to database');
+  await deleteExpiredTokens();
+  logger.info('Deleted all expired refresh_tokens from database')
   app.listen(port, () => 
     logger.info('Server started', { port })
   );

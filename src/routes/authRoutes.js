@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const {
-  createToken
+  createTokensController,
+  refreshTokenController
 } = require('../controllers/authControllers')
 
-router.post('/', createToken);
+router.post('/', createTokensController);
+router.post('/refresh', refreshTokenController);
 
 module.exports = router;

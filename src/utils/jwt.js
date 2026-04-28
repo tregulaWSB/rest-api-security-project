@@ -1,23 +1,37 @@
 const jwt = require('jsonwebtoken');
-const jwtSecret = process.env.JWT_secret;
+const crypto = require('node:crypto');
 
-const createJWT = (user) => {
+const jwtSecret = process.env.JWT_secret;
+const accessTokenLifetime = process.env.access_token_lifetime || '30m';
+const refreshTokenLifetime = process.env.refresh_token_lifetime || 60 * 60 * 24;
+
+const createAccessToken = (user) => {
   return jwt.sign(
     { username: user },
     jwtSecret,
-    { expiresIn: process.env.JWT_lifetime }
+    { expiresIn: accessTokenLifetime }
   );
 }
 
-const verifyJWT = (token) => {
+const verifyAccessToken = (accessToken) => {
   try {
-    return jwt.verify(token, jwtSecret);
+    return jwt.verify(accessToken, jwtSecret);
   } catch (err) {
     return null;
   }
 };
 
+const createRefreshToken = () => {
+  return crypto.randomBytes(64).toString('hex');
+};
+
+const getRefreshTokenExpiry = () => {
+  return Math.floor(Date.now() / 1000) + refreshTokenLifetime;
+};
+
 module.exports = {
-  createJWT,
-  verifyJWT
-}
+  createAccessToken,
+  verifyAccessToken,
+  createRefreshToken,
+  getRefreshTokenExpiry
+};

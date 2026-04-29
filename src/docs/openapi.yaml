@@ -6,7 +6,8 @@ info:
     Demonstracyjne REST API zbudowane na Node.js + SQLite, zabezpieczone zgodnie ze standardami OWASP API Security Top 10, OWASP Top 10 i OWASP ASVS.
 
 servers:
-  - url: http://localhost/api/v1
+  - url: http://localhost:3000/api/v1
+  # - url: https://localhost/api/v1
     description: Środowisko lokalne
 
 tags:
